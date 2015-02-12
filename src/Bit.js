@@ -1,4 +1,17 @@
-(function(global) {
+(function(global, factory) {
+    /* CommonJS */
+    if ( typeof require === 'function' && typeof module === 'object' && module && typeof exports === 'object' && exports)
+        module['exports'] = factory(global);
+    /* AMD */
+    else if ( typeof define === 'function' && define["amd"])
+        define("Bit", function() {
+            return factory(global);
+        });
+    /* Global */
+    else
+        (global["dcodeIO"] = global["dcodeIO"] || {})["Bit"] = factory(global);
+
+})(this, function(global) {
 
     var Bit = function(length) {
         if (length % 4 !== 0)
@@ -108,7 +121,10 @@
         }
 
         Array.prototype.splice.apply(this.bitArray, [Begin + offset, arrlen].concat(array.map(BitItem.Binarify)));
-        this.currentOffset = End;
+
+        this.mark(End);
+        this.lastWrittenBegin = Begin;
+        this.lastWrittenEnd = End;
         return this;
     };
 
@@ -140,7 +156,6 @@
 
         if (string.length % 32 !== 0) {
             string += new Array((32 - (string.length % 32)) + 1).join(' ');
-
         }
 
         var BITS = "\n";
@@ -155,6 +170,18 @@
 
         var _Br = false;
 
+        // info
+        (showType & 1) && (BITS += ' Bit' + new Array(61).join(' '));
+        (showType & 2) && (BITS += '  U8  ');
+        (showType & 4) && (BITS += '  U16 ');
+        BITS += "\n";
+
+        // info
+        (showType & 1) && (BITS += new Array(5).join(' |-------------|'));
+        (showType & 2) && (BITS += '      ');
+        (showType & 4) && (BITS += '      ');
+        BITS += "\n";
+
         for (var i = 0, len = string.length; i < len; i++) {
 
             if ((i + 1) % 32 === 0) {
@@ -162,7 +189,19 @@
             }
 
             if (showType & 1) {
-                _bit += ' ' + string.charAt(i);
+                if (this.currentOffset === i) {
+                    _bit += '[';
+                }
+                else if (this.lastWrittenBegin === i) {
+                    _bit += '<';
+                }
+                else if (this.lastWrittenEnd === i) {
+                    _bit += '>';
+                }
+                else {
+                    _bit += ' ';
+                }
+                _bit += string.charAt(i);
             }
 
             if (showType & 2) {
@@ -206,25 +245,6 @@
         BITS += "\n";
 
         return BITS;
-
-        function sign(str, pos, mark) {
-            return str.slice(0, pos) + mark + s.slice(pos + 1);
-        };
-
-        var string = this.toString();
-        var s = ' ' + string.split('').join(' ') + ' ';
-        if (this.currentOffset > -1)
-            s = sign(s, this.currentOffset * 2, '[');
-
-        var asc = '';
-        if (this.length % 8 === 0) {
-            for (var i = 0, len = string.length; i < len; i += 8) {
-                var b = parseInt(string.slice(i, i + 8), 2);
-                asc += b > 32 && b < 127 ? String.fromCharCode(b) : '.';
-            }
-        }
-
-        return '<' + s + '>' + '    ' + asc;
     };
 
     BitPrototype.toHex = function() {
@@ -241,14 +261,19 @@
     };
 
     BitPrototype.mark = function(Offset) {
-        if (Offset > this.length) {
-            throw 'Offset overflow!';
+        if (Offset > -1) {
+            this.currentOffset = Offset > this.length ? this.length : Offset;
         }
-        if (Offset > 0) {
-            this.currentOffset = Offset;
-        }
+        return this;
+    };
+
+    BitPrototype.debug = function(showType) {
+        showType = showType || 1;
+        var out = console.log.bind(console);
+        out(this.toString() + "\n" + "-------------------------------------------------------------------\n" + this.toDebug(showType));
+        return this;
     };
 
     global.Bit = Bit;
 
-})(window); 
+});

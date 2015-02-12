@@ -85,6 +85,11 @@
 
         if (!(Begin > -1)) {
             Begin = this.currentOffset;
+            // IF not set Begin or Begin < 0 AND End > -1
+            // THEN End means that the length, set End value to Begin + End
+            if (End > -1) {
+                End = Begin + End;
+            }
         }
         else {
             if (Begin > this.length) {
@@ -144,6 +149,17 @@
         return this;
     };
 
+    BitPrototype.toBinary = function() {
+        var i = 0, cc = [], pt = [];
+        while (i < this.length) {
+            cc.push(parseInt(this.bitArray.slice(i, i + 8).map(BitItem.Intify).join(''), 2));
+            if (cc.length >= 1024)
+                pt.push(String.fromCharCode.apply(String, cc)), cc = [];
+            i += 8;
+        }
+        return pt.join('') + String.fromCharCode.apply(String, cc);
+    };
+
     BitPrototype.toString = function() {
         return this.bitArray.map(BitItem.Intify).join('');
     };
@@ -188,6 +204,7 @@
                 _Br = true;
             }
 
+            // Left bit flag
             if (showType & 1) {
                 if (this.currentOffset === i) {
                     _bit += '[';
@@ -223,6 +240,13 @@
 
             if (_Br) {
                 if (showType & 1) {
+                    // End line flag
+                    if (this.lastWrittenEnd === i + 1) {
+                        _bit += '>';
+                    }
+                    else {
+                        _bit += ' ';
+                    }
                     BITS += _bit;
                     _bit = '';
                 }
@@ -270,10 +294,14 @@
     BitPrototype.debug = function(showType) {
         showType = showType || 1;
         var out = console.log.bind(console);
-        out(this.toString() + "\n" + "-------------------------------------------------------------------\n" + this.toDebug(showType));
+        // ;off
+        out(
+            this.toString() +
+            "\n ----------------------------------\n" +
+            this.toDebug(showType)
+        );
         return this;
     };
 
-    global.Bit = Bit;
-
+    return Bit;
 });

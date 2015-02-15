@@ -11,15 +11,11 @@ var CONF = {
 
 gulp.task('default', ['release']);
 
-gulp.task('server', ['connect', 'watch']);
+gulp.task('server', ['connect']);
 
 gulp.task('release', ['js']);
 
 gulp.task('reflush', ['release']);
-
-gulp.task('watch', function() {
-	gulp.watch([CONF.src + '**/*'], ['reflush']);
-});
 
 gulp.task('server', function() {
 	connect.server({

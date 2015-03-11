@@ -1,14 +1,21 @@
 # Bit.js #
 
-coming soon ...
+## Bit ##
 
-Late at night, too tired, too lazy to write...
+### Property ###
 
-Just have a look:
+- bitArray
+- Length
+- originalLength
+- currentByte
+- currentBit
+
+### Method ###
 
 ![](http://ww1.sinaimg.cn/large/699ef9c0jw1ep5yjgyqk3j20g00gj0v1.jpg)
 
-Bit操作
+## Bit操作 ##
+
 位写入位为由地位至高位，写满8位进入下一byte，byte写入顺序由cpu架构决定，JS方面可进行配置。
 
 eg:

@@ -31,19 +31,6 @@
         this.currentBit = 0;
     };
 
-    Bit.fromHex = function(hex) {
-        return new Bit(hex.length * 4).writeHex(hex, 0, hex.length * 4, true);
-    };
-
-    var BitItem = {
-        Binarify : function(v) {
-            return !!(v === '0' && ( v = null), v);
-        },
-        Intify : function(v) {
-            return v ? 1 : 0;
-        }
-    };
-
     var BitPrototype = Bit.prototype;
 
     /**
@@ -129,6 +116,24 @@
      */
     BitPrototype.writeInt = function(integer) {
         arguments[0] = integer.toString(2);
+        return this.writeBitString.apply(this, arguments);
+    };
+
+    /**
+     * Write HEX to BitArray
+     * @param {String} HEX
+     *
+     * 'A065E34D...'
+     * OR
+     * 'A0 65 E3 4D ...'
+     */
+    BitPrototype.writeHex = function(HEX) {
+        var _S = [];
+        HEX = HEX.replace(/\x20+/, '');
+        for(var i = 0, len = HEX.length; i < len; i += 2) {
+            _S.push(intToBits(parseInt(HEX.charAt(i) + HEX.charAt(i + 1), 16)));
+        }
+        arguments[0] = _S.join('');
         return this.writeBitString.apply(this, arguments);
     };
 
@@ -407,6 +412,10 @@
             _arr[i] = intToHex(_arr[i]);
         }
         return _arr.join('');
+    };
+
+    Bit.fromHex = function(hex) {
+        return new Bit.writeHex(hex);
     };
 
     BitPrototype.debug = function(showType) {

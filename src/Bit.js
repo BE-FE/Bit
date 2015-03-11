@@ -51,7 +51,7 @@
      * @param {Object} length
      */
     BitPrototype.write = function(value, length) {
-        if(Object.prototype.toString.call(value) === '[object Object]' && 'bitArray' in value) {
+        if(Object.prototype.toString.call(value) === '[object Object]' && 'bitArray' in value && value instanceof Bit) {
             return this.writeBit.apply(this, arguments);
         } else if( typeof value === 'string') {
             return this.writeString.apply(this, arguments);

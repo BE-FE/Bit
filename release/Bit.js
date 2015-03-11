@@ -12,11 +12,6 @@
         global['Bit'] = factory(global);
 })( window ? window : this, function(global) {
 
-    var BitString = function(str) {
-        this.length = str.length;
-        return str;
-    };
-
     var Bit = function(length, isLittleEndian) {
 
         this.isLittleEndian = !!isLittleEndian || false;
@@ -31,12 +26,18 @@
         this.currentBit = 0;
     };
 
-    var BitPrototype = Bit.prototype;
-
     /**
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * NEW replacement
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     */
+    
+    var BitPrototype = Bit.prototype;
+    
+    /**
+     * is BitString
+     * 
+     * @param {*} value
      */
     BitPrototype.isBitString = function(value) {
         return typeof value === 'string' && !/[^01]/.test(value);
@@ -51,7 +52,7 @@
      * @param {Object} length
      */
     BitPrototype.write = function(value, length) {
-        if(Object.prototype.toString.call(value) === '[object Object]' && 'bitArray' in value) {
+        if(Object.prototype.toString.call(value) === '[object Object]' && 'bitArray' in value && value instanceof Bit) {
             return this.writeBit.apply(this, arguments);
         } else if( typeof value === 'string') {
             return this.writeString.apply(this, arguments);
@@ -103,7 +104,7 @@
      * @param {Number} length
      */
     BitPrototype.writeUTF16String = function(str, length) {
-        var _C;
+        var _C = '';
         for(var i = 0, len = str.length; i < len; i++) {
             _C += leadZero(str.charAt(i).charCodeAt().toString(2), 16);
         }
@@ -152,13 +153,12 @@
      *  ==> '10101'
      */
     BitPrototype.writeBitString = function(value, length) {
-
         if(value == null) {
             return this;
         }
 
         if(!this.isBitString(value)) {
-            throw new TypeError('Type must be a BitString');
+            throw new TypeError('Value must be a BitString: [' + value.toString() + ']');
             return this;
         }
 

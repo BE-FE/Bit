@@ -1,7 +1,37 @@
 <!DOCTYPE html>
 <html>
-	<head>Bit</head>
+	<head>
+		Bit
+	</head>
 	<body>
 		<script type="text/javascript" src="js/Bit.js"></script>
+		<script>
+            var HEAD_CONF = {
+                nConFlag : ['Bit', 4],
+                bCompress : ['Bit', 1],
+                bDownCompress : ['Bit', 1],
+                bEncrypt : ['Bit', 2],
+                nReserved : ['Bit', 24]
+            };
+
+            var DATA = {
+                nConFlag : 8,
+                bCompress : 0,
+                bDownCompress : 0,
+                bEncrypt : 3,
+                nReserved : 'abc'
+            };
+
+            console.log(HEAD_CONF, DATA);
+            
+            var BT = new Bit();
+            for(var i in HEAD_CONF) {
+                BT.write(DATA[i], HEAD_CONF[i][1]);
+            }
+            
+            console.log('RES', BT.toInt32());
+            console.log('BINA', BT.toBinary());
+            BT.debug();
+		</script>
 	</body>
 </html>

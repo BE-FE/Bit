@@ -18,12 +18,18 @@ gulp.task('release', ['js']);
 
 gulp.task('reflush', ['release']);
 
-gulp.task('test', function() {
+gulp.task('test', ['test-watch'], function() {
+
+    gulp.watch([CONF.src + '**/*'], ['test-watch']);
+    
     connect.server({
         port : 8000,
-        root : CONF.test,
-        livereload : true
+        root : CONF.test
     });
+});
+
+gulp.task('test-watch', function() {
+    return gulp.src(CONF.src + 'Bit.js').pipe(gulp.dest(CONF.test));
 });
 
 gulp.task('clean', function() {

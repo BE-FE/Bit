@@ -4,12 +4,12 @@
         module['exports'] = factory(global);
     /* AMD */
     else if( typeof define === 'function' && define['amd'])
-        define('Bit', function() {
+        define(function() {
             return factory(global);
         });
     /* Global */
     else
-        global['Bit'] = factory(global);
+        global['Bit'] = global['Bit'] || factory(global);
 })( window ? window : this, function(global) {
 
     var Bit = function(length, isLittleEndian) {
@@ -26,17 +26,19 @@
         this.currentBit = 0;
     };
 
+    Bit.version = '0.1.0';
+
     /**
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      * NEW replacement
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
-    
+
     var BitPrototype = Bit.prototype;
-    
+
     /**
      * is BitString
-     * 
+     *
      * @param {*} value
      */
     BitPrototype.isBitString = function(value) {
@@ -308,8 +310,10 @@
 
         var _arr = [].concat(this.bitArray);
 
-        //test
-        this.isLittleEndian && _arr.reverse();
+        if(this.isLittleEndian) {
+            _arr.reverse();
+            this.currentByte = _arr.length - this.currentByte - 1;
+        }
 
         // Fill a row
         if(_arr.length % oneRow !== 0) {
@@ -354,15 +358,17 @@
                 }
 
                 _bit += ' ';
-                var byteData = intToBits(_arr[i]).split('').join(' ');
+                var byteData = _arr[i] != null ? intToBits(_arr[i]).split('').join(' ') : new Array(16).join(' ');
                 if(this.currentByte === i) {
                     byteData = byteData.split('');
                     byteData[14 - this.currentBit * 2 - 1] = '>';
                     byteData[14 - this.currentBit * 2 + 1] = '<';
                     byteData = byteData.join('');
+                    _bit += byteData;
+                } else {
+                    _bit += byteData;
+                    _bit += ' ';
                 }
-                _bit += byteData;
-                _bit += ' ';
             }
             if(showType & 2) {
                 _Byte8 += intToBits(_arr[i]);

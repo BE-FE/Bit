@@ -46,9 +46,7 @@
     };
 
     /**
-     * New
-     *
-     * Write value
+     * Write multiple type data
      *
      * @param {*} value
      * @param {Object} length
@@ -65,6 +63,8 @@
     };
 
     /**
+     * Write Bit instance to this instance
+     *
      * @param {Object} Bit Instace
      * @param {Number} length
      */
@@ -77,6 +77,9 @@
     };
 
     /**
+     * Write a string
+     * !This string is a normal string, NOT the BitString
+     *
      * @param {String} str
      * @param {Number} length
      */
@@ -89,6 +92,8 @@
     };
 
     /**
+     * Write a UTF8String
+     *
      * @param {String} str
      * @param {Number} length
      */
@@ -102,6 +107,8 @@
     };
 
     /**
+     * Write a UTF16String
+     *
      * @param {String} str
      * @param {Number} length
      */
@@ -115,6 +122,8 @@
     };
 
     /**
+     * Winte integer
+     *
      * @param {Number} integer
      */
     BitPrototype.writeInt = function(integer) {
@@ -123,7 +132,8 @@
     };
 
     /**
-     * Write HEX to BitArray
+     * Write HEX string
+     *
      * @param {String} HEX
      *
      * 'A065E34D...'
@@ -141,17 +151,17 @@
     };
 
     /**
-     * New
+     * Write BitString (based method)
      *
-     * Write Integer value
-     *
-     * @param {Object} value
+     * @param {Object} value must be a string composed of '0' and '1'
      * @param {Object} length
      *
      * eg:
      *  value = '011000100010101';
      *  length = 5
      *
+     *  011000100010101
+     *            ^
      *  ==> '10101'
      */
     BitPrototype.writeBitString = function(value, length) {
@@ -208,6 +218,7 @@
 
     /**
      * Set current block(byte) pointer offset
+     *
      * @param {Number} num
      */
     BitPrototype.setCurrentByte = function(num) {
@@ -217,8 +228,8 @@
 
     /**
      * Set current bit pointer offset in byte
-     * 0~7
-     * @param {Number} num
+     *
+     * @param {Number} num RANGE:0~7
      */
     BitPrototype.setCurrentBit = function(num) {
         this.currentBit = num;
@@ -227,6 +238,7 @@
 
     /**
      * Move to next block(byte)
+     *
      * currentByte + 1
      * currentByte = 0
      */
@@ -281,10 +293,23 @@
         return _arr.join('');
     };
 
+    /**
+     * Add leading zeros depending on the length
+     *
+     * @param {Object} val
+     * @param {Object} len
+     *
+     * leadZero('100010', 10) ==> '0000100010'
+     */
     function leadZero(val, len) {
         return new Array((len || 10) - val.toString().length + 1).join('0') + val;
     };
 
+    /**
+     * Converting a sufficient placeholder BINARY string from integer
+     *
+     * @param {Object} value
+     */
     function intToBits(value) {
         if(value == null) {
             return new Array(9).join('0');
@@ -292,6 +317,11 @@
         return leadZero((value || 0).toString(2), 8);
     };
 
+    /**
+     * Converting a sufficient placeholder HEX string from integer
+     *
+     * @param {Object} value
+     */
     function intToHex(value) {
         if(value == null) {
             return new Array(3).join('0');
@@ -299,6 +329,23 @@
         return leadZero((value || 0).toString(16), 2);
     };
 
+    /**
+     * Parse bitArray to HEX string
+     */
+    BitPrototype.toHex = function() {
+        var _arr = [].concat(this.bitArray);
+        for(var i = 0, len = _arr.length; i < len; i++) {
+            _arr[i] = intToHex(_arr[i]);
+        }
+        return _arr.join('');
+    };
+
+    /**
+     * Parse bitArray to format string, use to debug
+     * 
+     * @param {Number} showType
+     * @param {Number} oneRow
+     */
     BitPrototype.toDebug = function(showType, oneRow) {
 
         oneRow = oneRow || 4;
@@ -412,24 +459,26 @@
         return BITS;
     };
 
-    BitPrototype.toHex = function() {
-        var _arr = [].concat(this.bitArray);
-        for(var i = 0, len = _arr.length; i < len; i++) {
-            _arr[i] = intToHex(_arr[i]);
-        }
-        return _arr.join('');
-    };
-
-    Bit.fromHex = function(hex) {
-        return new Bit.writeHex(hex);
-    };
-
+    /**
+     * Print Debug data, similar to toDebug, show in console table
+     * 
+     * @param {Object} showType RANGE:0~7 (0:debug)
+     */
     BitPrototype.debug = function(showType) {
         showType = showType || 1;
         var out = console.log.bind(console);
         // ;off
         out(this.toString() + "\n ----------------------------------\n" + this.toDebug(showType));
         return this;
+    };
+    
+    /**
+     * Create a new Bit instance from HAX string
+     * 
+     * @param {Object} hex
+     */
+    Bit.fromHex = function(hex) {
+        return new Bit.writeHex(hex);
     };
 
     return Bit;

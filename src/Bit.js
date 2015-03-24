@@ -99,10 +99,12 @@
      */
     BitPrototype.writeUTF8String = function(str, length) {
         var _C = '';
+        var s = +new Date();
         for(var i = 0, len = str.length; i < len; i++) {
             _C += leadZero(str.charAt(i).charCodeAt().toString(2), 8);
         }
         arguments[0] = _C;
+        console.log('writeUTF8String', +new Date() - s, 'ms');
         return this.writeBitString.apply(this, arguments);
     };
 
@@ -114,10 +116,12 @@
      */
     BitPrototype.writeUTF16String = function(str, length) {
         var _C = '';
+        var s = +new Date();
         for(var i = 0, len = str.length; i < len; i++) {
             _C += leadZero(str.charAt(i).charCodeAt().toString(2), 16);
         }
         arguments[0] = _C;
+        console.log('writeUTF16String', +new Date() - s, 'ms');
         return this.writeBitString.apply(this, arguments);
     };
 
@@ -165,6 +169,7 @@
      *  ==> '10101'
      */
     BitPrototype.writeBitString = function(value, length) {
+        var s = +new Date();
         if(value == null) {
             return this;
         }
@@ -178,7 +183,7 @@
             length = value.length;
         }
 
-        if(length <= 0) {
+        if(length === 0) {
             return this;
         }
 
@@ -193,7 +198,6 @@
             _S = leadZero(_S, length);
         }
 
-        //console.log(_S);
         var _V;
         while(_S.length > 0) {
             // Data
@@ -205,14 +209,18 @@
                 this.bitArray[this.currentByte] = 0;
             }
             this.bitArray[this.currentByte] = this.bitArray[this.currentByte] + (parseInt(_V, 2) << this.currentBit);
-            this.currentByte = this.currentByte + Math.floor((this.currentBit + _V.length) / 8);
+
+            this.currentBit + _V.length > 7 && this.currentByte++;
             this.currentBit = (this.currentBit + _V.length) % 8;
+
+            //this.currentByte = this.currentByte + Math.floor((this.currentBit + _V.length) / 8);
         }
 
         this.byteLength = this.bitArray.length;
         this.length = this.byteLength * 8;
         this.originalLength = this.currentByte * 8 + this.currentBit;
 
+        console.log('writeBitString', +new Date() - s, 'ms');
         return this;
     };
 
@@ -234,6 +242,16 @@
     BitPrototype.setCurrentBit = function(num) {
         this.currentBit = num;
         return this;
+    };
+
+    /**
+     * Set current pointer of global offset
+     *
+     * @param {Number} num
+     */
+    BitPrototype.setCurrentPointer = function(num) {
+        this.currentBit = num % 8;
+        this.currentByte = (num - this.currentBit) / 8;
     };
 
     /**
@@ -342,7 +360,7 @@
 
     /**
      * Parse bitArray to format string, use to debug
-     * 
+     *
      * @param {Number} showType
      * @param {Number} oneRow
      */
@@ -403,18 +421,16 @@
                 } else {
                     _bit += ' ';
                 }
-
-                _bit += ' ';
                 var byteData = _arr[i] != null ? intToBits(_arr[i]).split('').join(' ') : new Array(16).join(' ');
+                byteData = ' ' + byteData + ' ';
                 if(this.currentByte === i) {
                     byteData = byteData.split('');
-                    byteData[14 - this.currentBit * 2 - 1] = '>';
-                    byteData[14 - this.currentBit * 2 + 1] = '<';
+                    byteData[15 - this.currentBit * 2 - 1] = '>';
+                    byteData[15 - this.currentBit * 2 + 1] = '<';
                     byteData = byteData.join('');
                     _bit += byteData;
                 } else {
                     _bit += byteData;
-                    _bit += ' ';
                 }
             }
             if(showType & 2) {
@@ -461,7 +477,7 @@
 
     /**
      * Print Debug data, similar to toDebug, show in console table
-     * 
+     *
      * @param {Object} showType RANGE:0~7 (0:debug)
      */
     BitPrototype.debug = function(showType) {
@@ -479,6 +495,22 @@
      */
     Bit.fromHex = function(hex) {
         return new Bit.writeHex(hex);
+    };
+    
+    /**
+     * 
+     * @param {Object} buffer
+     */
+    Bit.fromBuffer = function(buffer) {
+        
+    };
+    
+    /**
+     * 
+     * @param {*} data ArrayBuffer, HEX, Binary, Array
+     */
+    Bit.wrap = function(data){
+        
     };
 
     return Bit;

@@ -98,14 +98,10 @@
      * @param {Number} length
      */
     BitPrototype.writeUTF8String = function(str, length) {
-        var _C = '';
-        var s = +new Date();
         for(var i = 0, len = str.length; i < len; i++) {
-            _C += leadZero(str.charAt(i).charCodeAt().toString(2), 8);
+            this.writeBitString(str.charAt(i).charCodeAt().toString(2), 8);
         }
-        arguments[0] = _C;
-        console.log('writeUTF8String', +new Date() - s, 'ms');
-        return this.writeBitString.apply(this, arguments);
+        return this;
     };
 
     /**
@@ -168,60 +164,60 @@
      *            ^
      *  ==> '10101'
      */
-    BitPrototype.writeBitString = function(value, length) {
-        var s = +new Date();
-        if(value == null) {
+    BitPrototype.writeBitString = function(_S, _L) {
+        if(_S == null) {
             return this;
         }
 
-        if(!this.isBitString(value)) {
-            throw new TypeError('Value must be a BitString: [' + value.toString() + ']');
+        if(!this.isBitString(_S)) {
+            throw new TypeError('Value must be a BitString: [' + _S.toString() + ']');
             return this;
         }
 
-        if(length == null) {
-            length = value.length;
+        if(_L == null) {
+            _L = _S.length;
         }
 
-        if(length === 0) {
+        if(_L === 0) {
             return this;
         }
 
         // Is the same as the positive and negative
-        length = Math.abs(length);
+        _L = Math.abs(_L);
 
-        var _S = value;
-
-        if(_S.length > length) {
-            _S = _S.slice(-length);
-        } else if(_S.length < length) {
-            _S = leadZero(_S, length);
+        if(_S.length > _L) {
+            _S = _S.slice(-_L);
         }
 
-        var _V;
-        while(_S.length > 0) {
-            // Data
-            _V = _S.slice(this.currentBit - 8);
-            // Remaining
-            _S = _S.slice(0, this.currentBit - 8);
+        var _V, _SL = _S.length, cLen = 0, cBit = this.currentBit, cByte = this.currentByte;
 
-            if(this.bitArray[this.currentByte] == null) {
-                this.bitArray[this.currentByte] = 0;
+        while(cLen < _SL) {
+
+            // ???????????????????????????????????????????????????????????
+            _V = _S.substr(_SL - 8 * (cLen + 1) + cBit, 8 - cBit);
+
+            if(this.bitArray[cByte] == null) {
+                this.bitArray[cByte] = 0;
             }
-            this.bitArray[this.currentByte] = this.bitArray[this.currentByte] + (parseInt(_V, 2) << this.currentBit);
+            this.bitArray[cByte] = this.bitArray[cByte] + (parseInt(_V, 2) << cBit);
 
-            this.currentBit + _V.length > 7 && this.currentByte++;
-            this.currentBit = (this.currentBit + _V.length) % 8;
-
-            //this.currentByte = this.currentByte + Math.floor((this.currentBit + _V.length) / 8);
+            cBit + _V.length > 7 && cByte++;
+            cBit = (cBit + _V.length) % 8;
+            
+            cLen += _V.length;
         }
+        
+        this.setCurrentPointer(this.getCurrentPointer() + _L);
 
         this.byteLength = this.bitArray.length;
         this.length = this.byteLength * 8;
         this.originalLength = this.currentByte * 8 + this.currentBit;
 
-        console.log('writeBitString', +new Date() - s, 'ms');
         return this;
+    };
+
+    BitPrototype.getCurrentPointer = function() {
+        return this.currentByte * 8 + this.currentBit;
     };
 
     /**

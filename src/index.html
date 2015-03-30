@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		Bit
-	</head>
-	<body>
-		<script type="text/javascript" src="Bit.js"></script>
-		<script>
-		/*
+    <head>
+        Bit
+    </head>
+    <body>
+        <script type="text/javascript" src="Bit.js"></script>
+        <script>
+        /*
             var HEAD_CONF = {
                 nConFlag : ['Bit', 4],
                 bCompress : ['Bit', 1],
@@ -24,24 +24,25 @@
             };
 
             console.log(HEAD_CONF, DATA);
-            
+
             var BT = new Bit();
-            for(var i in HEAD_CONF) {
+            for (var i in HEAD_CONF) {
                 BT.write(DATA[i], HEAD_CONF[i][1]);
             }
-            
+
             console.log('RES', BT.toInt32());
             console.log('BINA', BT.toBinary());
             BT.debug();
         */
-		</script>
-		<script type="text/javascript" src="resource/bigData.test.js"></script>
-		<script>
-			var B = new Bit();
-			var s = +new Date();
-			B.write(bigData);
-			console.log('ALL', +new Date() - s, 'ms');
-			console.log(B.originalLength);
-		</script>
-	</body>
+        </script>
+        <script type="text/javascript" src="resource/bigData.test.js"></script>
+        <script>
+            var B = new Bit();
+            console.log(B);
+            var s = +new Date();
+            B.write(bigData);
+            console.log('ALL', +new Date() - s, 'ms');
+            console.log(B.originalLength);
+        </script>
+    </body>
 </html>

@@ -375,7 +375,7 @@
     };
     
     BitPrototype.getInt16 = function(from) {
-
+        this.bitArray
     };
     
     BitPrototype.getUint16 = function(from) {

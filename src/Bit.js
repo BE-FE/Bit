@@ -304,7 +304,7 @@
             this.writeBitTo.apply(this, arguments);
             break;
         case 3:
-            // write start to end 
+            // write start to end
             var start = arguments[1];
             var end = arguments[2];
             if(isArray(start)) {
@@ -388,13 +388,85 @@
         this.setCurrentBit(0);
         return this;
     };
-    
-    BitPrototype.get = function(from, length){
-        
+
+    BitPrototype.getBit = function() {
+
+        var start, length;
+
+        switch(arguments.length ) {
+        case 0:
+
+            start = this.getCurrentPointer();
+            if(this.originalLength - start <= 0) {
+                return '';
+            }
+            length = this.originalLength - start;
+
+            break;
+
+        case 1:
+
+            start = arguments[0];
+            length = this.originalLength - start;
+
+            if(isArray(start)) {
+                start = getPointer.apply(null, start);
+            }
+
+            if(this.originalLength - start <= 0) {
+                return '';
+            }
+
+            this.setCurrentPointer(start);
+
+            break;
+
+        case 2:
+
+            start = arguments[0];
+            length = arguments[1];
+
+            if(isArray(start)) {
+                start = getPointer.apply(null, start);
+            }
+
+            if(this.originalLength - start <= 0) {
+                return '';
+            } else if(this.originalLength - start < length) {
+                length = this.originalLength - start;
+            }
+
+            this.setCurrentPointer(start);
+
+            break;
+        }
+
+        var cByte = this.currentByte;
+        var cBit = this.currentBit;
+
+        var _S = [];
+        var _L = 0, _VL;
+
+        while(_L < length) {
+
+            if(length - _L > 8 - cBit) {
+                _VL = 8 - cBit;
+            } else {
+                _VL = length - _L;
+            }
+
+            _S.push(intToBits(this.bitArray[cByte]).substr(8 - _VL - cBit, _VL));
+
+            cBit + _VL > 7 && cByte++;
+            cBit = (cBit + _VL) % 8;
+            _L += _VL;
+        }
+
+        return _S.reverse().join('');
     };
-    
-    BitPrototype.getBetween = function(from, to){
-        
+
+    BitPrototype.getBitBetween = function(start, end) {
+
     };
 
     BitPrototype.getInt8 = function(from) {
@@ -402,11 +474,14 @@
     };
 
     BitPrototype.getUint8 = function(from) {
-        if(this.bitArray.length < 1) {
+        if(from == null) {
+            from = this.getCurrentPointer();
+        }
+        if(this.originalLength - from < 8) {
             throw new RangeError('Unable to meet Uint8, at least 8 bits');
         }
-        from = from || 0;
-        return new Uint8Array(this.bitArray.slice(0, 1));
+        console.log(parseInt(this.getBit(from, 8), 2));
+        return new Uint8Array([parseInt(this.getBit(from, 8), 2)]);
     };
 
     BitPrototype.getInt16 = function(from) {
@@ -414,7 +489,13 @@
     };
 
     BitPrototype.getUint16 = function(from) {
-
+        if(from == null) {
+            from = this.getCurrentPointer();
+        }
+        if(this.originalLength - from < 16) {
+            throw new RangeError('Unable to meet Uint16, at least 16 bits');
+        }
+        return new Uint16Array([parseInt(this.getBit(from, 16), 2)]);
     };
 
     BitPrototype.getInt32 = function(from) {
@@ -422,13 +503,13 @@
     };
 
     BitPrototype.getUint32 = function(from) {
-        if(this.bitArray.length < 4) {
+        if(from == null) {
+            from = this.getCurrentPointer();
+        }
+        if(this.originalLength - from < 32) {
             throw new RangeError('Unable to meet Uint32, at least 32 bits');
         }
-        from = from || 0;
-        var _arr = this.bitArray.slice(0, 4);
-        this.isLittleEndian && _arr.reverse();
-        return new Uint32Array();
+        return new Uint32Array([parseInt(this.getBit(from, 32), 2)]);
     };
 
     BitPrototype.toBitString = function() {

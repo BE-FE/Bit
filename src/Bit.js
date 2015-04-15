@@ -156,12 +156,11 @@
      */
     BitPrototype.writeHex = function(HEX) {
         var _S = [];
-        HEX = HEX.replace(/\x20+/, '');
+        HEX = HEX.replace(/\x20+/g, '');
         for(var i = 0, len = HEX.length; i < len; i += 2) {
-            _S.push(intToBits(parseInt(HEX.charAt(i) + HEX.charAt(i + 1), 16)));
+            this.writeBit.call(this, parseInt(HEX.charAt(i) + HEX.charAt(i + 1), 16).toString(2), 8);
         }
-        arguments[0] = _S.join('');
-        return this.writeBitString.apply(this, arguments);
+        return this;
     };
 
     /**
@@ -220,7 +219,7 @@
                 vEnd = _SL - cLen;
             } else {
                 // when > 8 bits clip bitString
-                vStart = _SL - 8 * (cLen + 1) + cBit;
+                vStart = _SL - cLen - 8 + cBit;
                 vEnd = 8 - cBit;
             }
 
@@ -239,7 +238,7 @@
             cLen += _V.length;
         }
 
-        var cEnd = this.getCurrentPointer() + _SL;
+        var cEnd = this.getCurrentPointer() + _L;
 
         // set Ending
         if(this.originalLength < cEnd) {

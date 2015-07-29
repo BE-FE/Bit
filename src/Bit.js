@@ -1,9 +1,9 @@
 (function(global, factory) {
     /* CommonJS */
-    if ( typeof require === 'function' && typeof module === 'object' && module && typeof exports === 'object' && exports)
+    if( typeof require === 'function' && typeof module === 'object' && module && typeof exports === 'object' && exports)
         module['exports'] = factory(global);
     /* AMD */
-    else if ( typeof define === 'function' && define['amd'])
+    else if( typeof define === 'function' && define['amd'])
         define(function() {
             return factory(global);
         });
@@ -27,7 +27,7 @@
         this.originalLength = 0;
 
         this.bitArray = new Array(this.length / 8);
-        for (var i = 0, len = this.bitArray.length; i < len; i++) {
+        for(var i = 0, len = this.bitArray.length; i < len; i++) {
             this.bitArray[i] = 0;
         }
         this.currentByte = 0;
@@ -69,17 +69,15 @@
      * @param {Object} length
      */
     BitPrototype.write = function(value, length) {
-        if (this.isBit(value)) {
+        if(this.isBit(value) || this.isBitString(value)) {
             return this.writeBit.apply(this, arguments);
-        } else if (this.isBitString(value)) {
-            return this.writeBitString.apply(this, arguments);
+        } else if( typeof value === 'string') {
+            return this.writeString.apply(this, arguments);
         }
         return this;
     };
 
     /**
-     * !!Do not use
-     *
      * Write a string
      * !This string is a normal string, NOT the BitString
      *
@@ -87,45 +85,21 @@
      * @param {Number} length
      */
     BitPrototype.writeString = function(str, length) {
-        if (/^[\x00-\xff]+$/.test(str)) {
-            return this.writeUTF8String.apply(this, arguments);
+        if(/^[\x00-\xff]+$/.test(str)) {
+            for(var i = 0, len = str.length; i < len; i++) {
+                this.writeBit(str.charAt(i).charCodeAt().toString(2), 8);
+            }
         } else {
-            return this.writeUTF16String.apply(this, arguments);
+            for(var i = 0, len = str.length; i < len; i++) {
+                this.writeBit(str.charAt(i).charCodeAt().toString(2), 16);
+            }
         }
-    };
 
-    /**
-     * !!Do not use
-     *
-     * Write a UTF8String
-     *
-     * @param {String} str
-     * @param {Number} length
-     */
-    BitPrototype.writeUTF8String = function(str, length) {
-        for (var i = 0, len = str.length; i < len; i++) {
-            this.writeBitString(str.charAt(i).charCodeAt().toString(2), 8);
-        }
         return this;
     };
 
     /**
-     * !!Do not use
-     *
-     * Write a UTF16String
-     *
-     * @param {String} str
-     * @param {Number} length
-     */
-    BitPrototype.writeUTF16String = function(str, length) {
-        for (var i = 0, len = str.length; i < len; i++) {
-            this.writeBitString.apply(str.charAt(i).charCodeAt().toString(2), 16);
-        }
-        return this;
-    };
-
-    /**
-     * Winte integer
+     * Write integer
      *
      * @param {Number} integer
      *
@@ -141,8 +115,7 @@
      * Other "numbers" type must use a specific method
      */
     BitPrototype.writeInt = function(integer, length) {
-        arguments[0] = integer.toString(2);
-        return this.writeBitString.apply(this, arguments);
+        return this.writeBit.call(this, integer.toString(2), length);
     };
 
     /**
@@ -179,27 +152,27 @@
      */
     BitPrototype.writeBit = function(_S, _L) {
 
-        if (_S == null)
+        if(_S == null)
             return this;
 
-        if (!this.isBit(_S) && !this.isBitString(_S)) {
+        if(!this.isBit(_S) && !this.isBitString(_S)) {
             throw new TypeError('Argument 0 Must be an BitInstance OR BitString');
             return this;
         }
 
-        if (this.isBit(_S))
+        if(this.isBit(_S))
             _S = _S.toBitString();
 
-        if (_L == null)
+        if(_L == null)
             _L = _S.length;
 
-        if (_L === 0)
+        if(_L === 0)
             return this;
 
         // Is the same as the positive and negative
         _L = Math.abs(_L);
 
-        if (_S.length > _L) {
+        if(_S.length > _L) {
             _S = _S.slice(-_L);
         }
 
@@ -211,9 +184,9 @@
 
         var vStart, vEnd;
 
-        while (cLen < _SL) {
+        while(cLen < _SL) {
 
-            if (_SL - cLen <= 8 - cBit) {
+            if(_SL - cLen <= 8 - cBit) {
                 // remaining
                 vStart = 0;
                 vEnd = _SL - cLen;
@@ -223,7 +196,7 @@
                 vEnd = 8 - cBit;
             }
 
-            if ( typeof this.bitArray[cByte] === 'undefined') {
+            if( typeof this.bitArray[cByte] === 'undefined') {
                 this.bitArray[cByte] = 0;
             }
             _V = _S.substr(vStart, vEnd);
@@ -241,7 +214,7 @@
         var cEnd = this.getCurrentPointer() + _L;
 
         // set Ending
-        if (this.originalLength < cEnd) {
+        if(this.originalLength < cEnd) {
             this.originalLength = cEnd;
             this.byteLength = this.bitArray.length;
             this.length = this.byteLength * 8;
@@ -259,31 +232,31 @@
      */
     BitPrototype.writeBitTo = function(_S) {
         switch(arguments.length) {
-        case 1:
-            // alias writeBit
-            this.writeBit.apply(this, arguments);
-            break;
-        case 2:
-            // write to
-            var sign = arguments[1];
-            if (isArray(sign)) {
-                sign = getPointer.apply(null, sign);
-            }
-            this.setCurrentPointer(sign);
-            this.writeBit.call(this, _S);
-            this.setCurrentPointer(this.originalLength);
-            break;
-        case 3:
-            // write to and length limited
-            var sign = arguments[1];
-            var length = arguments[2];
-            if (isArray(sign)) {
-                sign = getPointer.apply(null, sign);
-            }
-            this.setCurrentPointer(sign);
-            this.writeBit.call(this, _S, length);
-            this.setCurrentPointer(this.originalLength);
-            break;
+            case 1:
+                // alias writeBit
+                this.writeBit.apply(this, arguments);
+                break;
+            case 2:
+                // write to
+                var sign = arguments[1];
+                if(isArray(sign)) {
+                    sign = getPointer.apply(null, sign);
+                }
+                this.setCurrentPointer(sign);
+                this.writeBit.call(this, _S);
+                this.setCurrentPointer(this.originalLength);
+                break;
+            case 3:
+                // write to and length limited
+                var sign = arguments[1];
+                var length = arguments[2];
+                if(isArray(sign)) {
+                    sign = getPointer.apply(null, sign);
+                }
+                this.setCurrentPointer(sign);
+                this.writeBit.call(this, _S, length);
+                this.setCurrentPointer(this.originalLength);
+                break;
         }
         return this;
     };
@@ -294,30 +267,30 @@
      */
     BitPrototype.writeBitIn = function(_S) {
         switch(arguments.length) {
-        case 1:
-            // alias writeBit
-            this.writeBit.apply(this, arguments);
-            break;
-        case 2:
-            // alias writeBitTo
-            this.writeBitTo.apply(this, arguments);
-            break;
-        case 3:
-            // write start to end
-            var start = arguments[1];
-            var end = arguments[2];
-            if (isArray(start)) {
-                start = getPointer.apply(null, start);
-            }
-            if (isArray(end)) {
-                end = getPointer.apply(null, end);
-            }
-            if (end > start) {
-                this.setCurrentPointer(start);
-                this.writeBit.call(this, _S, end - start);
-                this.setCurrentPointer(this.originalLength);
-            }
-            break;
+            case 1:
+                // alias writeBit
+                this.writeBit.apply(this, arguments);
+                break;
+            case 2:
+                // alias writeBitTo
+                this.writeBitTo.apply(this, arguments);
+                break;
+            case 3:
+                // write start to end
+                var start = arguments[1];
+                var end = arguments[2];
+                if(isArray(start)) {
+                    start = getPointer.apply(null, start);
+                }
+                if(isArray(end)) {
+                    end = getPointer.apply(null, end);
+                }
+                if(end > start) {
+                    this.setCurrentPointer(start);
+                    this.writeBit.call(this, _S, end - start);
+                    this.setCurrentPointer(this.originalLength);
+                }
+                break;
         }
         return this;
     };
@@ -352,7 +325,7 @@
      * @param {Number} num
      */
     BitPrototype.setCurrentPointer = function(o) {
-        if (isArray(o)) {
+        if(isArray(o)) {
             this.currentByte = o[0];
             this.currentBit = o[1];
         } else {
@@ -393,51 +366,51 @@
         var start, length;
 
         switch(arguments.length ) {
-        case 0:
+            case 0:
 
-            start = this.getCurrentPointer();
-            if(this.originalLength - start <= 0) {
-                return '';
-            }
-            length = this.originalLength - start;
-
-            break;
-
-        case 1:
-
-            start = arguments[0];
-            length = this.originalLength - start;
-
-            if(isArray(start)) {
-                start = getPointer.apply(null, start);
-            }
-
-            if(this.originalLength - start <= 0) {
-                return '';
-            }
-
-            this.setCurrentPointer(start);
-
-            break;
-
-        case 2:
-
-            start = arguments[0];
-            length = arguments[1];
-
-            if(isArray(start)) {
-                start = getPointer.apply(null, start);
-            }
-
-            if(this.originalLength - start <= 0) {
-                return '';
-            } else if(this.originalLength - start < length) {
+                start = this.getCurrentPointer();
+                if(this.originalLength - start <= 0) {
+                    return '';
+                }
                 length = this.originalLength - start;
-            }
 
-            this.setCurrentPointer(start);
+                break;
 
-            break;
+            case 1:
+
+                start = arguments[0];
+                length = this.originalLength - start;
+
+                if(isArray(start)) {
+                    start = getPointer.apply(null, start);
+                }
+
+                if(this.originalLength - start <= 0) {
+                    return '';
+                }
+
+                this.setCurrentPointer(start);
+
+                break;
+
+            case 2:
+
+                start = arguments[0];
+                length = arguments[1];
+
+                if(isArray(start)) {
+                    start = getPointer.apply(null, start);
+                }
+
+                if(this.originalLength - start <= 0) {
+                    return '';
+                } else if(this.originalLength - start < length) {
+                    length = this.originalLength - start;
+                }
+
+                this.setCurrentPointer(start);
+
+                break;
         }
 
         var cByte = this.currentByte;
@@ -513,7 +486,7 @@
 
     BitPrototype.toBitString = function() {
         var _arr = [].concat(this.bitArray);
-        for (var i = 0, len = _arr.length; i < len; i++) {
+        for(var i = 0, len = _arr.length; i < len; i++) {
             _arr[i] = (i == len - 1) ? _arr[i].toString(2) : intToBits(_arr[i]);
         }
         return _arr.join('');
@@ -530,7 +503,7 @@
     BitPrototype.toBinary = function() {
         var _arr = [].concat(this.bitArray);
         this.isLittleEndian && _arr.reverse();
-        for (var i = 0, len = _arr.length; i < len; i++) {
+        for(var i = 0, len = _arr.length; i < len; i++) {
             _arr[i] = String.fromCharCode(_arr[i]);
         }
         return _arr.join('');
@@ -554,7 +527,7 @@
      * @param {Object} value
      */
     function intToBits(value) {
-        if (value == null) {
+        if(value == null) {
             return new Array(9).join('0');
         }
         return leadZero((value || 0).toString(2), 8);
@@ -566,7 +539,7 @@
      * @param {Object} value
      */
     function intToHex(value) {
-        if (value == null) {
+        if(value == null) {
             return new Array(3).join('0');
         }
         return leadZero((value || 0).toString(16), 2);
@@ -577,7 +550,7 @@
      */
     BitPrototype.toHex = function() {
         var _arr = [].concat(this.bitArray);
-        for (var i = 0, len = _arr.length; i < len; i++) {
+        for(var i = 0, len = _arr.length; i < len; i++) {
             _arr[i] = intToHex(_arr[i]);
         }
         return _arr.join('');
@@ -600,13 +573,13 @@
 
         var _arr = [].concat(this.bitArray);
 
-        if (this.isLittleEndian) {
+        if(this.isLittleEndian) {
             _arr.reverse();
             this.currentByte = _arr.length - this.currentByte - 1;
         }
 
         // Fill a row
-        if (_arr.length % oneRow !== 0) {
+        if(_arr.length % oneRow !== 0) {
             _arr = _arr.concat(new Array((oneRow - (_arr.length % oneRow)) + 1));
         }
 
@@ -632,22 +605,22 @@
         (showType & 4) && (BITS += '      ');
         BITS += "\n";
 
-        for (var i = 0, len = _arr.length; i < len; i++) {
+        for(var i = 0, len = _arr.length; i < len; i++) {
 
-            if ((i + 1) % oneRow === 0) {
+            if((i + 1) % oneRow === 0) {
                 _Br = true;
             }
 
-            if (showType & 0x1) {
-                if (this.currentByte === i) {
+            if(showType & 1) {
+                if(this.currentByte === i) {
                     _bit += '[';
-                } else if (this.currentByte + 1 === i) {
+                } else if(this.currentByte + 1 === i) {
                     _bit += ']';
                 } else {
                     _bit += ' ';
                 }
                 var byteData = ' ' + (_arr[i] != null ? intToBits(_arr[i]).split('').join(' ') : new Array(16).join(' ')) + ' ';
-                if (this.currentByte === i) {
+                if(this.currentByte === i) {
                     byteData = byteData.split('');
                     byteData[15 - this.currentBit * 2 - 1] = '>';
                     byteData[15 - this.currentBit * 2 + 1] = '<';
@@ -659,34 +632,35 @@
                     _Br && (_bit += ' ');
                 }
             }
-            if (showType & 0x10) {
+            if(showType & 2) {
                 _Byte8 += intToBits(_arr[i]);
-                if (_Byte8.length === 8) {
+                if(_Byte8.length === 8) {
                     var b = parseInt(_Byte8, 2);
                     _Asc += b > 0x20 && b < 0x7f ? String.fromCharCode(b) : '.';
                     _Byte8 = '';
                 }
             }
-            if (showType & 0x100) {
+            if(showType & 4) {
                 _Byte16 += intToBits(_arr[i]);
-                if (_Byte16.length === 16) {
+                if(_Byte16.length === 16) {
+                    _Byte16 = _Byte16.slice(8) + _Byte16.slice(0, 8);
                     var b = parseInt(_Byte16, 2);
                     _Utf8 += b > 0x800 && b < 0xffff ? String.fromCharCode(b) : '..';
                     _Byte16 = '';
                 }
             }
-            if (_Br) {
-                if (showType & 1) {
+            if(_Br) {
+                if(showType & 1) {
                     // End line flag
                     BITS += _bit;
                     _bit = '';
                 }
-                if (showType & 2) {
+                if(showType & 2) {
                     BITS += '  ' + _Asc;
                     _Asc = '';
 
                 }
-                if (showType & 4) {
+                if(showType & 4) {
                     BITS += '  ' + _Utf8;
                     _Utf8 = '';
                 }
